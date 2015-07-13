@@ -23,11 +23,12 @@ THE COPYRIGHT HOLDER SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT L
 
 using namespace std;
 
+float   BTracer::gcsstd2rad = 2.0;
 float   BTracer::gcsstd_min = 1.0;
-float   BTracer::gcsstd_step = 1.0;
+float   BTracer::gcsstd_step = 0.5;
 int     BTracer::Nsteps = 3;   // three steps to cover scale with samples
 float   BTracer::ang = 3.14 * (30.0/180.0); // degrees in radians
-int     BTracer::Ndirs = 5;
+int     BTracer::Ndirs = 5; // these Ndirs are different from ones used in the main plugin
 float   BTracer::K = 3.0;
 
 BTracer::BTracer(int _Niterations, int _Nstates, int _scale, bool _is2D, float _zDist)
@@ -58,18 +59,20 @@ BTracer::BTracer(int _Niterations, int _Nstates, int _scale, bool _is2D, float _
         W = 2*W2+1;
     }
 
-    V2 = 1;//_scale/2;
+    V2 = (is2D)?_scale/2:1;//;
     V = 2*V2 + 1;
 
     // gcsstd define
-    gcsstd_max = 0.4*U2;
+    gcsstd_max = ((float)1/gcsstd2rad)*U2;
     int cnt = 0;
     for (float sg = gcsstd_min; sg <= gcsstd_max; sg+=gcsstd_step) cnt++;
     gcsstd_nr = cnt;
 
     gcsstd = new float[gcsstd_nr];
     cnt = 0;
-    for (float sg = gcsstd_min; sg <= gcsstd_max; sg+=gcsstd_step) gcsstd[cnt++] = sg;
+    cout << "gcsstd:" << flush;
+    for (float sg = gcsstd_min; sg <= gcsstd_max; sg+=gcsstd_step) {gcsstd[cnt++] = sg; cout << sg << " " << flush;}
+    cout << endl;
 
     img_vals = new float[U*W*V];
 
@@ -702,41 +705,47 @@ vector<int> BTracer::trace( float x,  float y,  float z,
             }
 
             // stopage criteria: check the tagmap label in corresponding neighbourhood
-            float x_sph = xc[node_cnt];
-            float y_sph = yc[node_cnt];
-            float z_sph = zc[node_cnt];
+            float x_sph   = xc[node_cnt];
+            float y_sph   = yc[node_cnt];
+            float z_sph   = zc[node_cnt];
             float rxy_sph = rc[node_cnt];
-            float rz_sph = rc[node_cnt];
+            float rz_sph  = rc[node_cnt]/zDist; // /zDist
 
             int x1 = floor(x_sph-rxy_sph);  int x2 = ceil(x_sph+rxy_sph);
             int y1 = floor(y_sph-rxy_sph);  int y2 = ceil(y_sph+rxy_sph);
             int z1 = floor(z_sph-rz_sph);   int z2 = ceil(z_sph+rz_sph);
+
+//            cout << x1 << " - " << x2 << " | " << y1 << " - " << y2 << " | " << z1 << " - " << z2 << endl;
 
             tags_reached.clear();
 
             bool reached_background = true;
             bool readched_othertag = false;
 
+            // check the values -
             for (int xChkLocal = x1; xChkLocal <= x2; ++xChkLocal) {
                 for (int yChkLocal = y1; yChkLocal <= y2; ++yChkLocal) {
-                    for (int zChkLocal = z1; zChkLocal <= z2; ++zChkLocal) {
 
-                        if (    xChkLocal>=0 && xChkLocal<img_width  &&
-                                yChkLocal>=0 && yChkLocal<img_height &&
-                                zChkLocal>=0 && zChkLocal<img_length) {
+                    if (is2D) { // then there is no need to loop through the layers
+
+//                        cout << "---- " << xChkLocal << " - " << yChkLocal << "   -------   " << img_length << endl;
+
+                        if (xChkLocal>=0 && xChkLocal<img_width  && yChkLocal>=0 && yChkLocal<img_height) {
 
                             // loc is within the image
-                            int tag_curr = tag_map[zChkLocal*(img_width*img_height)+yChkLocal*img_width+xChkLocal];
+                            int tag_curr = tag_map[0*(img_width*img_height)+yChkLocal*img_width+xChkLocal];
 
                             reached_background = reached_background && (tag_curr==0);
 
                             bool reached_othertag1 = tag_curr>0 && tag_curr!=tag_beg;
 
                             readched_othertag = readched_othertag || reached_othertag1;
-                            if (reached_othertag1) tags_reached.push_back(tag_curr);
+                            if (reached_othertag1) {
+                                tags_reached.push_back(tag_curr);
+                            }
 
                         }
-                        else
+                        else // it went out of the image - stop and return -1
                         {
                             tags_reached.clear();
                             tags_reached.push_back(-1);
@@ -744,17 +753,49 @@ vector<int> BTracer::trace( float x,  float y,  float z,
                         }
 
                     }
+                    else { // loop through the z stack
+
+                        for (int zChkLocal = z1; zChkLocal <= z2; ++zChkLocal) {
+
+                            if (    xChkLocal>=0 && xChkLocal<img_width  &&
+                                    yChkLocal>=0 && yChkLocal<img_height &&
+                                    zChkLocal>=0 && zChkLocal<img_length) {
+
+                                // loc is within the image
+                                int tag_curr = tag_map[zChkLocal*(img_width*img_height)+yChkLocal*img_width+xChkLocal];
+
+                                reached_background = reached_background && (tag_curr==0);
+
+                                bool reached_othertag1 = tag_curr>0 && tag_curr!=tag_beg;
+
+                                readched_othertag = readched_othertag || reached_othertag1;
+                                if (reached_othertag1) {
+                                    tags_reached.push_back(tag_curr);
+                                }
+
+                            }
+                            else // it went out of the image - stop and return -1
+                            {
+                                tags_reached.clear();
+                                tags_reached.push_back(-1);
+                                return tags_reached;
+                            }
+
+                        }
+
+                    }
+
                 }
             }
 
             if (reached_background) { // means that the voxel is in the background
-                cout << "\nreached background at " << node_cnt << " steps " << x1 << ", " << x2 << ", " << y1 << ", " << y2 << ", " << z1 << ", " <<z2<<endl;
+//                cout << "\nreached background at " << node_cnt << " steps " << x1 << ", " << x2 << ", " << y1 << ", " << y2 << ", " << z1 << ", " <<z2<<endl;
                 tags_reached.clear();
-                tags_reached.push_back(-2);
+                tags_reached.push_back(-1); // (-1) it's not added
+//                tags_reached.push_back(-2); // (-2) it is added
                 return tags_reached; // add loose trace that ended up in the background
             }
             if (readched_othertag) {
-//                cout <<  << endl;
                 return tags_reached; // guaranteed to have at leas one tag in the list
             }
 
@@ -1123,8 +1164,8 @@ float BTracer::zncc( float x, float y, float z,
                         float xcoord = vv*(-vx) + uu*ux; // x components of all three orthogonals
                         float ycoord = vv*(-vy) + uu*uy;
 
-                        if ( floor(x+xcoord)<0 || ceil(x+xcoord)>img_w-1) return 0;
-                        if ( floor(y+ycoord)<0 || ceil(y+ycoord)>img_h-1) return 0;
+                        if ( floor(x+xcoord)<0 || ceil(x+xcoord)>=img_w-1) return 0;
+                        if ( floor(y+ycoord)<0 || ceil(y+ycoord)>=img_h-1) return 0;
 
                         float value = interp(x+xcoord, y+ycoord, 0, img, img_w, img_h, img_l, false);
                         img_vals[v1*U+u1] = value;
@@ -1154,9 +1195,9 @@ float BTracer::zncc( float x, float y, float z,
                         // z coord is downscaled when sampling the image value for measurement
                         zcoord = zcoord/zDist;
 
-                        if ( floor(x+xcoord)<0 || ceil(x+xcoord)>img_w-1) return 0;
-                        if ( floor(y+ycoord)<0 || ceil(y+ycoord)>img_h-1) return 0;
-                        if ( floor(z+zcoord)<0 || ceil(z+zcoord)>img_l-1) return 0;
+                        if ( floor(x+xcoord)<0 || ceil(x+xcoord)>=img_w-1) return 0;
+                        if ( floor(y+ycoord)<0 || ceil(y+ycoord)>=img_h-1) return 0;
+                        if ( floor(z+zcoord)<0 || ceil(z+zcoord)>=img_l-1) return 0;
 
                         float value = interp(x+xcoord, y+ycoord, z+zcoord, img, img_w, img_h, img_l, false);
                         img_vals[v1*U*W+w1*U+u1] = value;

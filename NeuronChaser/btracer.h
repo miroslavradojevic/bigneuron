@@ -23,6 +23,7 @@ public:
 
     int node_cnt; // # nodes in current trace [0, Niterations*Nsteps)
 
+    static float gcsstd2rad; // scaling between gaussian cross section standard deviation and the neurite radius
     static float gcsstd_step;
     static float gcsstd_min;
     float        gcsstd_max;
