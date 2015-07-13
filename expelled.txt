@@ -1,0 +1,543 @@
+//int BTracer::trace(
+//        float x,  float y,  float z,
+//        float vx, float vy, float vz,
+//        float             r,
+//        unsigned char *   img,
+//        int               img_width,
+//        int               img_height,
+//        int               img_length,
+//        float             angstd_deg,
+//        float             gcsstdstd_pix,
+//        int               tag_beg,
+//        int *             tag_map
+//        //,unsigned char *   fg
+//        ){
+
+//    nodes_reached = 0; //reset each call
+
+//    start_px = x;
+//    start_py = y;
+//    start_pz = z;
+//    start_vx = vx;
+//    start_vy = vy;
+//    start_vz = vz;
+
+//    int out = 0;
+
+//    for (int iter_counter = 0; iter_counter < Niterations; ++iter_counter) {
+
+//            iter(x, y, z, vx, vy, vz, r, img, img_width, img_height, img_length, angstd_deg, gcsstdstd_pix, false); // iter_counter==0
+
+//            // now that all the iter() steps are done take the Nstates highest ones
+//            // experiment - take one only - the highest and backtrack it
+//            // add them to xc, avoid xt now - just a rough scatch
+
+//            // extract the best (single) track with Nsteps, go backwards and add each to the xc, yc, zc, rc
+//            float max_post = 0.0;
+//            int sample_index = -1;
+//            for (int j = 0; j < (int)round(pow(Ndirs, Nsteps)); ++j) {
+//                if (postrtt[Nsteps-1][j]>max_post) {
+//                    max_post = postrtt[Nsteps-1][j];
+//                    sample_index = j;
+//                }
+//            }
+
+//            // set the source for the next iteration
+//            x = xtt[Nsteps-1][sample_index];
+//            y = ytt[Nsteps-1][sample_index];
+//            z = ztt[Nsteps-1][sample_index];
+//            vx = vxtt[Nsteps-1][sample_index];
+//            vy = vytt[Nsteps-1][sample_index];
+//            vz = vztt[Nsteps-1][sample_index];
+//            r = rtt[Nsteps-1][sample_index];
+
+//            // ADDING: there is no stopping criteria here, add the one that was at last step to xc
+//            xc[iter_counter*Nsteps+(Nsteps-1)] = xtt[Nsteps-1][sample_index];
+//            yc[iter_counter*Nsteps+(Nsteps-1)] = ytt[Nsteps-1][sample_index];
+//            zc[iter_counter*Nsteps+(Nsteps-1)] = ztt[Nsteps-1][sample_index];
+//            rc[iter_counter*Nsteps+(Nsteps-1)] = rtt[Nsteps-1][sample_index];
+
+//            // addd the reminder by backtracking (if there is 2 or more in that one)
+//            for (int si = Nsteps-1; si >= 1; --si) {
+//                sample_index = sample_index/Ndirs;
+//                xc[iter_counter*Nsteps+(si-1)] = xtt[si-1][sample_index];
+//                yc[iter_counter*Nsteps+(si-1)] = ytt[si-1][sample_index];
+//                zc[iter_counter*Nsteps+(si-1)] = ztt[si-1][sample_index];
+//                rc[iter_counter*Nsteps+(si-1)] = rtt[si-1][sample_index];
+//            }
+//            // check overlap for stopping criteria
+//            for (int ni = 0; ni < Nsteps; ++ni) {
+//                int idx = iter_counter*Nsteps+ni;
+////                if (fg[(int)round(zc[idx])*img_width*img_height+(int)round(yc[idx])*img_width+(int)round(xc[idx])]==0) {nodes_reached=idx;return 1;}
+////                for (int xnn = floor(xc[idx]-rc[idx]); xnn <= ceil(xc[idx]+rc[idx]); ++xnn) {
+////                    for (int ynn = floor(yc[idx]-rc[idx]); ynn <= ceil(yc[idx]+rc[idx]); ++ynn) {
+////                        for (int znn = floor(zc[idx]-rc[idx]/zDist); znn <= ceil(zc[idx]+rc[idx]/zDist); ++znn) {
+////                            if (gpnt_map[znn*img_width*img_height+ynn*img_width+xnn]>0 && gpnt_map[znn*img_width*img_height+ynn*img_width+xnn]!=start_label) {
+////                                nodes_reached=idx;
+////                                return 1;
+////                            }
+////                            if (fg[znn*img_width*img_height+ynn*img_width+xnn]==0) {nodes_reached=idx;return 1;}
+////                        }
+////                    }
+////                }
+//            }
+//            nodes_reached = iter_counter*Nsteps + Nsteps;
+//    }
+//    return 1;
+//}
+
+
+    //rotation_matrix(    1,0,0, vx, vy, vz, rot); // vz should be zero
+    //rotation_apply(rot, 0,1,0, ux, uy, uz); // get the othogonal vector
+    // rotation_matrix(    0,0,1, vx, vy, vz, rot);
+    // rotation_apply(rot, 1,0,0, ux, uy, uz); // get the othogonal vectors
+    // rotation_apply(rot, 0,1,0, wx, wy, wz);
+    //        if (dbg){
+    //            cout << vx << " " << vy << " " << vz << endl;
+    //            cout << ux << " " << uy << " " << uz << endl;
+    //            cout << wx << " " << wy << " " << wz << endl;
+    //        }
+    //                        if (dbg) {
+    //                            cout << 1 << " " << v1%7 << " " << x << " " << y+ycoord << " " << z+zcoord << " " << 0.5 << " " << -1 << endl;
+    //                        }
+
+
+
+
+
+//    for (int gi = 0; gi < nodelist.size(); ++gi) {
+//        NeuronSWC nn;
+//        nn.nodeinseg_id = gi+1;
+//        nn.type = 6;
+//        nn.n = gi+1;
+//        nn.x = gpnt_list[gi][0];
+//        nn.y = gpnt_list[gi][1];
+//        nn.z = gpnt_list[gi][2];
+//        nn.r = gpnt_list[gi][3];
+//        nn.parent = -1;
+//        nt.listNeuron.append(nn);
+//    }
+
+    // once more go from each....
+//    int current_label = gpnt_list.size()+1; // take first available
+//    for (int gi = 0; gi < gpnt_list.size(); ++gi) {
+//        // bayesian_tracer.trace(xtest,ytest,ztest,  gx/g,gy/g,gz/g, 1.5, data1d, N, M, P, PARA.angSig, PARA.gcsSig);
+//        int res = bay_trac.trace(
+//                            gpnt_list[gi][0],
+//                            gpnt_list[gi][1],
+//                            gpnt_list[gi][2],
+//                            gpnt_list[gi][4],
+//                gpnt_list[gi][5],
+//                gpnt_list[gi][6],
+//                gpnt_list[gi][3],
+//                data1d,
+//                N,
+//                M,
+//                P,
+//                PARA.angSig,
+//                PARA.gcsSig,
+//                gpnt_map,
+//                gi+1);
+
+//        if (res==1) {
+
+//            printf("\nfound trace %d \n", bay_trac.node_cnt);
+//            // add the trace to the map
+//            for (int idx = 0; idx < bay_trac.node_cnt; ++idx) {
+
+//                NeuronSWC nn;
+//                nn.nodeinseg_id = current_label;
+//                nn.type = 4;
+//                nn.n = current_label;
+//                nn.x = bay_trac.xc[idx];
+//                nn.y = bay_trac.yc[idx];
+//                nn.z = bay_trac.zc[idx];
+//                nn.r = bay_trac.rc[idx];
+//                nn.parent = (idx==0)?-1:current_label-1;
+//                nt.listNeuron.append(nn);
+
+//                for (int xnn = floor(bay_trac.xc[idx]-bay_trac.rc[idx]); xnn <= ceil(bay_trac.xc[idx]+bay_trac.rc[idx]); ++xnn) {
+//                    for (int ynn = floor(bay_trac.yc[idx]-bay_trac.rc[idx]); ynn <= ceil(bay_trac.yc[idx]+bay_trac.rc[idx]); ++ynn) {
+//                        for (int znn = floor(bay_trac.zc[idx]-bay_trac.rc[idx]/zDist); znn <= ceil(bay_trac.zc[idx]+bay_trac.rc[idx]/zDist); ++znn) {
+
+//                            gpnt_map[znn*N*M+ynn*N+xnn] = current_label;
+
+//                        }
+//                    }
+//                }
+//                current_label++;
+//            }
+//        }
+//    }
+
+
+        // extract the best (single) track with Nsteps, go backwards and add each to the xc, yc, zc, rc
+        // set the source for the next iteration
+//        x = xtt[Nsteps-1][sample_index];
+//            y = ytt[Nsteps-1][sample_index];
+//            z = ztt[Nsteps-1][sample_index];
+//            vx = vxtt[Nsteps-1][sample_index];
+//            vy = vytt[Nsteps-1][sample_index];
+//            vz = vztt[Nsteps-1][sample_index];
+//            r = rtt[Nsteps-1][sample_index];
+//            //
+//            // ADDING: there is no stopping criteria here, add the one that was at last step to xc
+//            xc[iter_counter*Nsteps+(Nsteps-1)] = xtt[Nsteps-1][sample_index];
+//            yc[iter_counter*Nsteps+(Nsteps-1)] = ytt[Nsteps-1][sample_index];
+//            zc[iter_counter*Nsteps+(Nsteps-1)] = ztt[Nsteps-1][sample_index];
+//            rc[iter_counter*Nsteps+(Nsteps-1)] = rtt[Nsteps-1][sample_index];
+
+//            // addd the reminder by backtracking (if there is 2 or more in that one)
+//            for (int si = Nsteps-1; si >= 1; --si) {
+//                sample_index = sample_index/Ndirs;
+//                xc[iter_counter*Nsteps+(si-1)] = xtt[si-1][sample_index];
+//                yc[iter_counter*Nsteps+(si-1)] = ytt[si-1][sample_index];
+//                zc[iter_counter*Nsteps+(si-1)] = ztt[si-1][sample_index];
+//                rc[iter_counter*Nsteps+(si-1)] = rtt[si-1][sample_index];
+//            }
+
+
+        //        predict(xloc, yloc, zloc,
+//                vxloc, vyloc, vzloc,
+//                rloc,
+//                angula_diff_std_deg, gcsstd_diff_std_pix,
+//                xtt1[i], ytt1[i], ztt1[i],
+//                vxtt1[i], vytt1[i], vztt1[i],
+//                rtt1[i],
+//                priortt1[i]
+//                );
+
+//        if (i_step==0) {
+//            predict(xloc, yloc, zloc,
+//                    vxloc, vyloc, vzloc,
+//                    rloc,
+//                    angula_diff_std_deg, gcsstd_diff_std_pix,
+//                    xtt1[i], ytt1[i], ztt1[i],
+//                    vxtt1[i], vytt1[i], vztt1[i],
+//                    rtt1[i],
+//                    priortt1[i]
+//                    );
+//        }
+//        else {
+//            for (int j = 0; j < round(pow(Ndirs,i)); ++j) { // loop the ones predicted in previous i
+//                predict(xtt[i-1][j], ytt[i-1][j], ztt[i-1][j],
+//                        vxtt[i-1][j], vytt[i-1][j], vztt[i-1][j],
+//                        rtt[i-1][j],
+//                        angula_diff_std_deg, gcsstd_diff_std_pix,
+//                        &xtt[i][j*Ndirs], &ytt[i][j*Ndirs], &ztt[i][j*Ndirs],
+//                        &vxtt[i][j*Ndirs], &vytt[i][j*Ndirs], &vztt[i][j*Ndirs],
+//                        &rtt[i][j*Ndirs],
+//                        &priortt[i][j*Ndirs]
+//                        );
+//            }
+//        }
+
+
+//              printf("%d;%d (%d): %f; %f; %f; %f; \n",
+//                  i,j, j/Ndirs,
+//                  ((i==0)?1:postrtt[i-1][j/Ndirs]),
+//                  priortt[i][j],
+//                  lhoodtt[i][j],
+//                  postrtt[i][j]);
+
+//            if (postrtt[i][j]>mx) mx = postrtt[i][j];
+//            if (postrtt[i][j]<mn) mn = postrtt[i][j];
+
+
+        // check the likelihood to see if it makes sense to use it (if all likelihoods are zero then don'r embed them but propagate the prior as posterior)
+//        if (lhoods_mx>0.00001) { // larger than some minimum, it did not hapen that the likelihoods are all zero
+
+//            // there was something, makes sense to use it
+//            float mn = 1;
+//            float mx = -1;
+
+//            for (int j = 0; j < round(pow(Ndirs,i+1)); ++j) { // loop current step
+
+//                postrtt[i][j] = ((i==0)?1.0:postrtt[i-1][j/Ndirs]) * priortt[i][j] * lhoodtt[i][j];
+
+////              printf("%d;%d (%d): %f; %f; %f; %f; \n",
+////                  i,j, j/Ndirs,
+////                  ((i==0)?1:postrtt[i-1][j/Ndirs]),
+////                  priortt[i][j],
+////                  lhoodtt[i][j],
+////                  postrtt[i][j]);
+
+//                if (postrtt[i][j]>mx) mx = postrtt[i][j];
+//                if (postrtt[i][j]<mn) mn = postrtt[i][j];
+
+//            }
+
+////          printf("min--max = %f -- %f \n", mn, mx);
+
+//            for (int j = 0; j < round(pow(Ndirs,i+1)); ++j) {
+//            //postrtt[i][j] /= sm;
+//            postrtt[i][j] = (postrtt[i][j]-mn)/(mx-mn);
+//            // my tweak to visualize
+//            // rtt[i][j] = postrtt[i][j];
+//            }
+//        }
+//        else {
+//        // they were all zero
+//    float mn = 1;
+//    float mx = -1;
+//    for (int j = 0; j < round(pow(Ndirs,i+1)); ++j) {
+//        postrtt[i][j] = ((i==0)?1.0:postrtt[i-1][j/Ndirs]) *
+//                priortt[i][j] * 1.0;//((lhoods_sum>0.00001)?(lhoodtt[i][j]):1.0);     // ### likelihood embedded here!
+////        printf("%d;%d (%d): %f; %f; %f; %f; \n",
+////                i,j, j/Ndirs,
+////                ((i==0)?1:postrtt[i-1][j/Ndirs]),
+////                priortt[i][j],
+////                lhoodtt[i][j],
+////                postrtt[i][j]);
+//        if (postrtt[i][j]>mx) mx = postrtt[i][j];
+//        if (postrtt[i][j]<mn) mn = postrtt[i][j];
+//    }
+////    printf("min--max = %f -- %f \n", mn, mx);
+//    for (int j = 0; j < round(pow(Ndirs,i+1)); ++j) {
+//        //postrtt[i][j] /= sm;
+//        postrtt[i][j] = (postrtt[i][j]-mn)/(mx-mn);
+//        // my tweak to visualize
+//        // rtt[i][j] = postrtt[i][j];
+//    }
+//    }
+        int swc_idx = 1;
+        for (int i = 0; i < Nsteps; ++i) {
+            for (int j = 0; j < (int)round(pow(Ndirs,i+1)); ++j) {
+                printf("%d  6  %f  %f  %f  %f -1 \n", swc_idx, xtt[i][j], ytt[i][j], ztt[i][j], postrtt[i][j]);
+                swc_idx++;
+            }
+        }            // iter will predict from previous Nstates points: fill xtt, ytt, ztt, vxtt, vytt, vztt, rtt up
+            for (int k = 0; k < Nstates; ++k) {
+
+                // backtrack:
+                for (int step_i = Nsteps-1; step_i >= 0; --step_i) {
+
+                        int sample_i_at_step  = postrtt_midx/(int)round(pow(Ndirs,Nsteps-1-step_i));
+                        // backtrack index [0, Ndirs), [0, Ndirs^2), [0, Ndirs^3)... at current step
+
+                        // weighted mean wrt to the selected posteriors
+                        float sample_w = postrtt[step_i][sample_i_at_step];
+
+                        wt[iter_counter*Nsteps+step_i][k] = sample_w;
+                        wsums[step_i] += sample_w;
+
+                        xt[iter_counter*Nsteps+step_i][k]    = xtt[step_i][sample_i_at_step];
+                        yt[iter_counter*Nsteps+step_i][k]    = ytt[step_i][sample_i_at_step];
+                        zt[iter_counter*Nsteps+step_i][k]    = ztt[step_i][sample_i_at_step];
+
+                        vxt[iter_counter*Nsteps+step_i][k]   = vxtt[step_i][sample_i_at_step];
+                        vyt[iter_counter*Nsteps+step_i][k]   = vytt[step_i][sample_i_at_step];
+                        vzt[iter_counter*Nsteps+step_i][k]   = vztt[step_i][sample_i_at_step];
+
+                        rt[iter_counter*Nsteps+step_i][k]    = rtt[step_i][sample_i_at_step];
+
+                } // loop steps
+
+            } // loop states
+
+
+
+                if (true) {
+        
+        // test likelihood in 
+        
+        // start it from the highest intensity location, just test
+        int xtest = 0;
+        int ytest = 0;
+        int ztest = 0;
+        unsigned char max_val = 0;
+        for (long i = 0; i < size; ++i) {
+            if (data1d[i]>max_val) {
+                max_val = data1d[i];
+                xtest = i % N;
+                ztest = i / (N*M);
+                ytest = i/N-ztest*M;
+            }
+        }
+
+
+
+
+//        float ang = (170/180.0)*3.14;
+//        xtest = 100;
+//        ytest = 100;
+//        ztest = 20;
+//        xtest = 303;
+//        ytest = 533;
+//        ztest = 62;
+//        xtest = N/2;
+//        ytest = M/2;
+//        ztest = P/2;
+
+        printf("\n\n--->%d|%d|%d\n", xtest, ytest, ztest); // trace from the highest intensity point
+        float gx = 1;
+        float gy = 1; // -1
+        float gz = 0;
+        float g = sqrt(gx*gx+gy*gy+gz*gz);
+
+
+        cout<<"probing tracer likelihood..."<<endl;
+
+        float rads;
+        float got = bayesian_tracer.likelihood2(xtest, ytest, ztest, gx/g,gy/g,gz/g, data1d, N, M, P, rads, true);
+        cout<< got << endl;
+        if (true) {cout<<"(^^--^^)exiting..."<<endl; return; }
+
+        int * tagmap = new int[size];
+        for (long i = 0; i < size; ++i) tagmap[i] = -1;
+
+        int tag_init = tagmap[ztest*(N*M)+ytest*N+xtest];
+//        cout<< tag_init << " --> " << endl;
+
+        int tag_end = bayesian_tracer.trace(xtest,ytest,ztest,  gx/g,gy/g,gz/g, 1.5,
+                              data1d, N, M, P,
+                              PARA.angSig, PARA.gcsSig,
+                              tagmap, tag_init);
+
+        cout<< " --> " << tag_end << endl;
+
+        delete [] tagmap; tagmap = 0;
+
+
+
+        // save the test trace
+        NeuronTree nt_trace;
+        QString swc_name = PARA.inimg_file + "_testTrace.swc";
+        nt_trace.name = "testTrace";
+
+        for (int ni = 0; ni < bayesian_tracer.node_cnt; ++ni) {
+
+            NeuronSWC nn;
+            nn.nodeinseg_id = ni+1;
+            nn.type = 6;
+            nn.n = ni+1;
+            nn.x = bayesian_tracer.xc[ni];
+            nn.y = bayesian_tracer.yc[ni];
+            nn.z = bayesian_tracer.zc[ni];
+            nn.r = bayesian_tracer.rc[ni];
+            nn.parent = (ni==0)?-1:ni;
+            nt_trace.listNeuron.append(nn);
+
+        }
+
+        writeSWC_file(swc_name.toStdString().c_str(), nt_trace);
+
+    }
+    //
+    if (true) {cout<<"exiting..."<<endl; return; }
+
+        ofstream myfile;
+        for (int zz = 0; zz < P; ++zz) {
+            QString of = PARA.inimg_file + "_scr_"+QString("%1").arg(zz, 4, 10, QChar('0'))+".txt";
+            myfile.open (of.toStdString().c_str());
+
+            for (int yy = 0; yy < M; ++yy) { // height
+                for (int xx = 0; xx < N; ++xx) { // width
+                    myfile << scr[zz*(N*M)+yy*N+xx] << " ";
+                }
+                myfile << endl;
+            }
+            myfile.close();
+        }
+
+                            if (no_overlap(i2xyz[i][0], i2xyz[i][1], i2xyz[i][2], A, B, gpnt_map, N, M, P)) {
+
+                        float * nn = new float[7];
+                        nn[0] = i2xyz[i][0];
+                        nn[1] = i2xyz[i][1];
+                        nn[2] = i2xyz[i][2];
+                        nn[3] = i2sig[i];
+                        nn[4] = i2vx[i];
+                        nn[5] = i2vy[i];
+                        nn[6] = i2vz[i];
+
+                        gpnt_list.push_back(nn); // add it to the list
+
+
+                        // label the added region in the map
+                        for (int xnn = i2xyz[i][0]-A; xnn <= i2xyz[i][0]+A; ++xnn) {
+                            for (int ynn = i2xyz[i][1]-A; ynn <= i2xyz[i][1]+A; ++ynn) {
+                                for (int znn = i2xyz[i][2]-B; znn <= i2xyz[i][2]+B; ++znn) {
+                                    if (xnn>=0 && xnn<N && ynn>=0 && ynn<M && znn>=0 && znn<P) {
+                                        gpnt_map[znn*N*M+ynn*N+xnn] = gpnt_list.size(); // >0
+                                    }
+                                }
+                            }
+                        }
+
+                    } // initial one was valid
+
+
+
+                else { // check if the initial one (indexed with 'i') overlaps
+                    int A = ceil(SCALE_RADIUS*i2sig[i]);
+                    int B  = (P==1)? 0 : round(SCALE_RADIUS*(i2sig[i]/PARA.zDist));
+                } // !found
+
+
+//        unsigned char * out_zncc_plot = new unsigned char[size];
+//        for (long i = 0; i < cnt_fg; ++i) {
+//            if (i2zncc[i]>=0) {
+//                int x = i2xyz[i][0];
+//                int y = i2xyz[i][1];
+//                int z = i2xyz[i][2];
+//                out_zncc_plot[z*N*M+y*N+x] = i2zncc[i] * 255;
+//            }
+//        }
+//        QString outimg_file = PARA.inimg_file + QString("_corr.tif");
+//        simple_saveimage_wrapper(callback, outimg_file.toStdString().c_str(), out_zncc_plot, in_sz, V3D_UINT8);
+//        delete [] out_zncc_plot; out_zncc_plot = 0;
+
+
+
+// mdl.get_corr(x,y,z, data1d, N, M, P, get_zncc, get_s, get_vx, get_vy, get_vz);
+    //                                        int A = ceil(SCALE_RADIUS*get_s);
+    //                                        int B  = (P==1)? 0 : round(SCALE_RADIUS*(get_s/PARA.zDist));
+
+    //                                        if (no_overlap(xn, yn, zn, A, B, gpnt_map, N, M, P)) {
+    //                                            found = true;
+    //                                            lmax_zncc   = get_zncc; // so that the next one can pick up from there
+
+    //                                            gpnt_x = xn;
+    //                                            gpnt_y = yn;
+    //                                            gpnt_z = zn;
+    //                                            gpnt_s    = get_s;
+    //                                            gpnt_vx   = get_vx;
+    //                                            gpnt_vy   = get_vy;
+    //                                            gpnt_vz   = get_vz;
+    //                                        }
+
+    //mdl.get_corr(xn,yn,zn, data1d, N, M, P, get_zncc, get_s, get_vx, get_vy, get_vz);
+    //                                            gpnt_map[zn*N*M+yn*N+xn] = 0;
+    //                                            i2zncc[in]   = get_zncc;
+    //                                            i2sig[in]    = get_s;
+    //                                            i2vx[in]     = get_vx;
+    //                                            i2vy[in]     = get_vy;
+    //                                            i2vz[in]     = get_vz;
+    //                                        else {
+    //                                            get_zncc    = i2zncc[in];
+    //                                            get_s       = i2sig[in];
+    //                                            get_vx      = i2vx[in];
+    //                                            get_vy      = i2vy[in];
+    //                                            get_vz      = i2vz[in];
+    //                                        }
+    //                                        int in = xyz2i[zn*N*M+yn*N+xn];
+    //                                        if (in>=0) { // if nbr. was in the fg.
+    //                                        }
+
+
+/// no overlap is expelled - inefficient - better to block starting the calcualtion at some location
+//bool no_overlap(int atx, int aty, int atz, int lim_xy, int lim_z, int* input_gpnt_map, int width, int height, int length) {
+//    bool not_ovlping = true;
+//    for (int xnn = atx-lim_xy; xnn <= atx+lim_xy; ++xnn) {
+//        for (int ynn = aty-lim_xy; ynn <= aty+lim_xy; ++ynn) {
+//            for (int znn = atz-lim_z; znn <= atz+lim_z; ++znn) {
+//                if (xnn>=0 && xnn<width  && ynn>=0 && ynn<height && znn>=0 && znn<length && input_gpnt_map[znn*width*height+ynn*width+xnn]>0) {
+//                    not_ovlping = false; // it overlaps with some other region
+//                    return not_ovlping;
+//                }
+//            }
+//        }
+//    }
+//    return not_ovlping;
+//}
