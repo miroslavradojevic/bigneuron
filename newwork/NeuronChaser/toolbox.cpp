@@ -6,117 +6,17 @@ IT IS NOT ALLOWED TO REDISTRIBUTE, SELL, OR LEASE THIS SOFTWARE, OR DERIVATIVE W
 IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE TO ANY PARTY FOR DIRECT, INDIRECT, SPECIAL, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, OF ANY KIND WHATSOEVER, ARISING OUT OF THE USE OF THIS SOFTWARE AND ITS DOCUMENTATION, EVEN IF ADVISED OF THE POSSIBILITY THEREOF.
 
 THE COPYRIGHT HOLDER SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE EXPRESS OR IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE SOFTWARE AND CORRESPONDING DOCUMENTATION IS PROVIDED "AS IS". THE COPYRIGHT HOLDER HAS NO OBLIGATION TO PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
+ * 2015-5-31 : by Miroslav Radojevic
  */
 
 #include "toolbox.h"
-#include <cmath>
+#include <math.h>
 #include "v3d_message.h"
 #include <fstream>
 #include <float.h>
 #include <iostream>
 
 using namespace std;
-
-int mode(vector<int> vals) {
-
-    if (vals.size()>0) {
-
-        int mn = vals[0];
-        int mx = vals[0];
-
-        for (int k = 1; k < vals.size(); ++k) {
-            if (vals[k]>mx)
-                mx = vals[k];
-            if (vals[k]<mn)
-                mn = vals[k];
-        }
-
-        if (mx==mn)
-            return mn;
-
-        // draw a histogram
-        int hlen = mx-mn+1;
-        int hist[hlen];
-        for (int i = 0; i < hlen; ++i)
-            hist[i] = 0;
-
-        int peakval  = -1;
-        int peakfreq = -1;
-
-        for (int i = 0; i < vals.size(); ++i) {
-            hist[vals[i]-mn]++;
-
-            if (hist[vals[i]-mn]>peakfreq) {
-                peakfreq = hist[vals[i]-mn];
-                peakval  = vals[i];
-            }
-        }
-
-        return peakval;
-
-    }
-
-    return -1;
-
-}
-
-void selec(vector<int> trctags, vector<int> ndetags, int cntth, int excludetag, vector<int> & rchtrctags, vector<int> & rchndetags) {
-    // each trace value will have at least one node value in ndevals, assign each histogram componennt that was >0 with corresponding nodetag
-
-    if (trctags.size()!=ndetags.size()) cout<<"WRONG!!"<<endl;
-
-    rchtrctags.clear();
-    rchndetags.clear();
-
-    // histogram of trace tags
-    if (trctags.size()>0) {
-
-        int mn = trctags[0];
-        int mx = trctags[0];
-
-        for (int k = 1; k < trctags.size(); ++k) {
-            if (trctags[k]>mx) mx = trctags[k];
-            if (trctags[k]<mn) mn = trctags[k];
-        }
-
-        if (mx==mn) {
-            // there is only one trace tag value, all are the same trace
-            if (trctags.size()>=cntth && mn!=excludetag) {
-                rchtrctags.push_back(mn); // add it if it differs from excludetag
-                rchndetags.push_back(ndetags[ndetags.size()/2]);
-            }
-        }
-        else {
-            // there is range of values, draw a histogram of trace tags within the neighbourhood
-            int hlen = mx-mn+1;
-
-            int hist[hlen];
-            int matchnde[hlen];
-
-            for (int i = 0; i < hlen; ++i) {
-                hist[i] = 0;
-                matchnde[i] = -1;
-            }
-
-            for (int i = 0; i < trctags.size(); ++i) {
-                hist[trctags[i]-mn]++;
-                matchnde[trctags[i]-mn] = ndetags[i];
-            }
-
-            // take those that had count above some value
-            for (int i = 0; i < hlen; ++i) {
-                int ttag = mn+i;
-                if (hist[i]>=cntth && ttag!=excludetag) {
-                    rchtrctags.push_back(ttag);
-                    rchndetags.push_back(matchnde[i]);
-                }
-            }
-
-        }
-
-    }
-
-}
 
 unsigned char quantile(unsigned char *a, int a_len, int ratioNum, int ratioDen) {
 
@@ -186,19 +86,19 @@ unsigned char quantile(vector<unsigned char> a, int ratioNum, int ratioDen) {
 
 }
 
-//float zncc(float *v, int v_len, float v_avg, float *tmplt_hat, float tmplt_hat_sum_sqr) {
+float zncc(float *v, int v_len, float v_avg, float *tmplt_hat, float tmplt_hat_sum_sqr) {
 
-//    float num = 0;
-//    float den = 0;
+    float num = 0;
+    float den = 0;
 
-//    for (int i = 0; i < v_len; i++) {
-//        num += (v[i] - v_avg) * tmplt_hat[i];
-//        den += pow(v[i] - v_avg, 2);
-//    }
+    for (int i = 0; i < v_len; i++) {
+        num += (v[i] - v_avg) * tmplt_hat[i];
+        den += pow(v[i] - v_avg, 2);
+    }
 
-//    return (float) (num / sqrt(den * tmplt_hat_sum_sqr));
+    return (float) (num / sqrt(den * tmplt_hat_sum_sqr));
 
-//}
+}
 
 void descending(float * a, int a_len, int * idx) {
 
@@ -451,10 +351,9 @@ void conn3d(unsigned char * inimg, int width, int height, int depth, int * labim
 //        regtoadd[2] = zmean;
 //        regtoadd[3] = ; // average of rx and ry
 
-        float rmean = min((xmax-xmin)/2.0, (ymax-ymin)/2.0);
-        //( (xmax-xmin)/2.0 + (ymax-ymin)/2.0 )/2.0;
+        float rmean = ( (xmax-xmin)/2.0 + (ymax-ymin)/2.0 )/2.0;
 
-//        cout << "add R " << regionNumber << " : " << pointsInThisRegion << " voxels, vint=" << vint << "\t" << flush;
+        cout << "add R " << regionNumber << " : " << pointsInThisRegion << " voxels, vint=" << vint << "\t" << flush;
         cout << xmean << " " << ymean << " " << zmean << " " << rmean << endl;
 
 
@@ -705,4 +604,6 @@ unsigned char maxentropy_th(unsigned char * image1, long size) {
       return tMax;
 
 }
+
+
 

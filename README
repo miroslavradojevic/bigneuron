@@ -30,7 +30,7 @@ vaa3d -x NeuronChaser -f nc_func -i image.tif -p 1 12 99 0.6 15 60 30 5 1 0
 
 
 ############################################
-####              Advantra              ####
+####   Advantra (bigneuron submission)  ####
 ############################################
 vaa3d -x Advantra -f help
 ############################################
@@ -85,3 +85,35 @@ vaa3d -x NeuronChaserX -f ncx_func -i image.tif -p 12 0.3 95 0.6 15 60 30 5 1
 vaa3d -x NeuronChaserX -f ncx_func -i image.tif -p 12 0.3 99 0.6 15 60 30 5 1
 vaa3d -x NeuronChaserX -f ncx_func -i image.tif -p 12 0.8 95 0.6 15 60 30 5 1
 vaa3d -x NeuronChaserX -f ncx_func -i image.tif -p 12 0.8 99 0.6 15 60 30 5 1
+
+############################################
+############################################
+############################################
+
+On local machine Advantra plugin was replaced with the new Advantra, complete redesign of the bigneuron submission plugin. New code is placed in Advantra directory while the one submitted to the bigneuron was stored in Advantra_bigneuron 
+
+############################################
+####              Advantra              ####
+############################################
+vaa3d -x Advantra -f help
+############################################
+---- ADVANTRA usage ----
+vaa3d -x Advantra -f advantra_func -i <inimg_file> -p <sigmax msiter sig2radius znccth kappa step ni np zdist>
+inimg_file          The input image.
+sigmax              Max Gaussian cross-section sigma.
+msiter              # refinement iterations.
+seedscmin           minimum seed score (uint8 greylevels 0-255).
+znccth              Correlation threshold.
+kappa               Von Mises variance.
+step                Prediction step.
+ni                  # trace iterations.
+np                  # trace particles.
+zdist               z layer dist.
+blurring            blurring (0-no,1-yes).
+grouping            grouping method (0-cylinder,1-sphere).
+nodepp              nodes per pixel trace density limit.
+outswc_file         Will be named automatically based on the input image file name, so you don't have to specify it.
+############################################
+~/vaa3d/vaa3d_tools/bin/vaa3d64.app/Contents/MacOS/vaa3d64 -x Advantra -f advantra_func -i image.v3dpbd -p 3 2 0.001 0.4 3 2 20 25 2 0 1 9
+
+

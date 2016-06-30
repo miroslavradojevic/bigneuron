@@ -19,3 +19,4 @@ syntax: glob
 .settings
 .metadata
 .idea
+.DS_Store

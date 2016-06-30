@@ -4,15 +4,15 @@
 #include <iostream>
 #include <vector>
 
-//using namespace std;
+using namespace std;
 
-int mode(std::vector<int> vals);
+int mode(vector<int> vals);
 
-void selec(std::vector<int> trctags, std::vector<int> ndetags, int cntth, int excludetag, std::vector<int> & rchtrctags, std::vector<int> & rchndetags);
+void selec(vector<int> trctags, vector<int> ndetags, int cntth, int excludetag, vector<int> & rchtrctags, vector<int> & rchndetags);
 
 unsigned char quantile(unsigned char *a, int a_len, int ratioNum, int ratioDen);
 
-unsigned char quantile(std::vector<unsigned char> a, int ratioNum, int ratioDen);
+unsigned char quantile(vector<unsigned char> a, int ratioNum, int ratioDen);
 
 //float zncc(float *v, int v_len, float v_avg, float *tmplt_hat, float tmplt_hat_sum_sqr);
 
@@ -20,7 +20,7 @@ void descending(float * a, int a_len, int * idx);
 
 void probability_distribution(float * a, int a_len);
 
-void conn3d(unsigned char * inimg, int width, int height, int depth, int * labimg, int maxNrRegions, bool diagonal, int valuesOverDouble, int minRegSize, std::vector<float> &xc, std::vector<float> &yc, std::vector<float> &zc, std::vector<float> &rc);
+void conn3d(unsigned char * inimg, int width, int height, int depth, int * labimg, int maxNrRegions, bool diagonal, int valuesOverDouble, int minRegSize, vector<float> &xc, vector<float> &yc, vector<float> &zc, vector<float> &rc);
 
 unsigned char intermodes_th(unsigned char * image1, long size);
 
@@ -52,8 +52,11 @@ void quicksort(T* array, int* idxs, int startIndex, int endIndex) {
 
 }
 
+
+
 template<typename T>
 void swp(T &a, T &b) {T temp; temp = a; a = b; b = temp;}
+
 
 template<typename T>
 int quicksort_partition(T* array, int* indxs,    T pivot,    int startIndex, int endIndex) {
@@ -78,6 +81,10 @@ int quicksort_partition(T* array, int* indxs,    T pivot,    int startIndex, int
     return lBdry;
 
 }
+
+
+
+
 
 template<typename T>
 int partition(T* G, int* Gidxs, int first, int last) {
@@ -183,6 +190,10 @@ void getKhighestIdxs(T* G, int* Gidxs, int Glen, int K, int* Kidxs) { // G, Gidx
 
 }
 
+
+
+
+
 template<typename T>
 void get1highest(T* G, int Glen, int &Gidx){ // G is not modified
 
@@ -197,12 +208,16 @@ void get1highest(T* G, int Glen, int &Gidx){ // G is not modified
 
 }
 
+
+
+
+
 template<typename T>
 void print_array(T* arr, int arr_len) {
     for (int var = 0; var < arr_len; ++var) {
-        std::cout << arr[var] << "\t";
+        cout << arr[var] << "\t";
     }
-    std::cout << std::endl;
+    cout << endl;
 }
 
 #endif // TOOLBOX_H
