@@ -9,7 +9,7 @@ THE COPYRIGHT HOLDER SPECIFICALLY DISCLAIMS ANY WARRANTIES, INCLUDING, BUT NOT L
  */
 
 #include "toolbox.h"
-#include <cmath>
+#include <math.h>
 #include "v3d_message.h"
 #include <fstream>
 #include <float.h>
